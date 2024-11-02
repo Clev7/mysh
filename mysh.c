@@ -2,50 +2,44 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
-char *read_input(FILE *stream) {
-    size_t buf_size = 8192;
+// Passing in n lets the user know the buffer size
+ssize_t readline(char **buffer, size_t *buf_size, FILE *stream) {
+    if (buffer == NULL || buf_size == NULL || stream == NULL) {
+        return -1;
+    }
 
     // I guess you don't add 1 because it's already
     // a full 8 KB.
-    char *buffer = (char *) malloc(sizeof(char) * buf_size);
+    *buffer = (char *) malloc(sizeof(char) * (*buf_size));
 
-    if (buffer == NULL) {
-        perror("Could not allocate memory to buffer\n");
+    // Up to the programmer what to do with this in
+    if (*buffer == NULL) {
+        return -1;
     }
 
-    char c = fgetc(stream);
-    int len = 1;
+    size_t len = 0;
+    while (true) {
+        // Casting makes this clearer
+        char c = (char) fgetc(stream);
+        if (c == EOF || c == '\n') break;
 
-    bool done = false;
+        len++;
 
-    while (!done) {
-        while (c != EOF && len <= buf_size) {
-            buffer[len++ - 1] = c;
+        if (len > buf_size) {
+            (*buf_size) *= 2;
+            buffer = (char *) realloc(buffer, sizeof(char) * (*buf_size));
 
-            c = fgetc(stream);
+            if (buffer == NULL) {
+                return -1;
+            }
         }
-
         
     }
 
-
-    while (fgets(buffer, buf_size, stdin) != NULL) {
-        if (len < buf_size) {
-            buffer[len] = '\0';
-            return buffer;
-        }
-
-        if (len == buf_size) {
-            if (buffer[buf_size - 1] == '\n') {
-                buffer[buf_size - 1] = '\0';
-                return buffer;
-            }
-
-            buf_size *= 2;
-            buffer = (char *) realloc(buffer, sizeof(char) * buf_size);
-        }
-    }
+    buffer[len-1] = '\0';
+    return buffer;
 }
 
 int main(void) {
