@@ -2,4 +2,4 @@ A few notes about this project.
 
 Some assumptions I've decided to make in order to scope down what I wanted to get out of this project:
 1. I want to make sure that whatever it is I do in this project I should be able to use as a best practice outside of this project. You might notice that I didn't use perror when malloc fails in some instances for example. This is on purpose since it should be up to the developer to handle this information (there might be some necessary cleanup for example).
-2. While it might be possible to rewrite this code to comply entirely with the C standard, it will use things like ssize_t that aren't defined there.
+2. While it might be possible to rewrite this code to comply entirely with the C standard, it may or may not use things like ssize_t that aren't defined there.
