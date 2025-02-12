@@ -53,7 +53,7 @@ rl_result *readline(FILE *stream, size_t *buf_size) {
         *buf_size = DEFAULT_BUF_SIZE;
     }
 
-    printf("buf_size: %ld\n", *buf_size);
+    // printf("buf_size: %ld\n", *buf_size);
 
     // I guess you don't add 1 because it's already
     // a full 8 KB.
@@ -99,7 +99,7 @@ rl_result *readline(FILE *stream, size_t *buf_size) {
 int main(void) {
     printf("# ");
 
-    while (1) {
+    while (true) {
         size_t *buf_size = calloc(1, sizeof(size_t));
         rl_result *res = readline(stdin, buf_size);
 
@@ -112,26 +112,30 @@ int main(void) {
 
         char *command = curr_token;
 
-        if (command == "movetodir") {
+        if (!strcmp(command, "movetodir")) {
 
-        } else if (command == "whereami") {
+        } else if (!strcmp(command, "whereami")) {
 
-        } else if (command == "history") {
+        } else if (!strcmp(command, "history")) {
 
-        } else if (command == "byebye") {
+        } else if (!strcmp(command, "byebye")) {
+            printf("exiting...\n");
+            exit(0);
+        } else if (!strcmp(command, "replay")) {
 
-        } else if (command == "replay") {
+        } else if (!strcmp(command, "start")) {
 
-        } else if (command == "start") {
+        } else if (!strcmp(command, "background")) {
 
-        } else if (command == "background") {
+        } else if (!strcmp(command, "dalek")) {
 
-        } else if (command == "dalek") {
+        } else if (!strcmp(command, "repeat")) {
 
-        } else if (command == "repeat") {
+        } else if (!strcmp(command, "dalekall")) {
 
-        } else if (command == "dalekall") {
-
+        } else {
+            printf("Command not found\n");
+            continue;
         }
 
 
