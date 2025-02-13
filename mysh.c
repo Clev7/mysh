@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <sys/types.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <errno.h>
+
+// TODO: Fix memory leaks
+// TODO: Write unit testing
 
 /*
     Commands to implement:
@@ -96,10 +102,21 @@ rl_result *readline(FILE *stream, size_t *buf_size) {
     return res;
 }
 
+typedef struct {
+    size_t size, capacity;
+    char **vector
+} vector_str;
+
 int main(void) {
-    printf("# ");
+    char *cwd = getcwd(NULL, 0);
+
+    
+    size_t hist_size = 10;
+    char **history = malloc(sizeof(char *) * hist_size);
 
     while (true) {
+        printf("# ");
+
         size_t *buf_size = calloc(1, sizeof(size_t));
         rl_result *res = readline(stdin, buf_size);
 
@@ -108,14 +125,24 @@ int main(void) {
             continue;
         }
 
-        char *curr_token = strtok(res->buffer, " ");
-
-        char *command = curr_token;
+        const char *command = strtok(res->buffer, " ");
 
         if (!strcmp(command, "movetodir")) {
+            char *path = strtok(NULL, " ");
 
+            DIR *dir = opendir(path);
+
+            // file exists
+            if (dir) {
+                cwd = path;
+                closedir(dir);
+            } else if (errno == ENOENT) {
+                printf("Not a valid folder path\n");
+            } else {
+                printf("movetodir failed for some unknown reason\n");
+            }
         } else if (!strcmp(command, "whereami")) {
-
+            printf("%s\n", cwd);
         } else if (!strcmp(command, "history")) {
 
         } else if (!strcmp(command, "byebye")) {
@@ -126,7 +153,7 @@ int main(void) {
         } else if (!strcmp(command, "start")) {
 
         } else if (!strcmp(command, "background")) {
-
+            
         } else if (!strcmp(command, "dalek")) {
 
         } else if (!strcmp(command, "repeat")) {
@@ -134,13 +161,8 @@ int main(void) {
         } else if (!strcmp(command, "dalekall")) {
 
         } else {
-            printf("Command not found\n");
-            continue;
+            printf("%s: command not found\n", command);
         }
 
-
-        // printf("command: %s\n", res->buffer);
-        // printf("bytes read: %ld\n", res->bytes_read);
-        break;
     }
 }
