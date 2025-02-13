@@ -7,6 +7,8 @@
 #include <dirent.h>
 #include <errno.h>
 
+#include "vector_str.h"
+
 // TODO: Fix memory leaks
 // TODO: Write unit testing
 
@@ -37,19 +39,19 @@ typedef struct {
 
 // buf_size is actually more like buffer capacity
 
-// Just perror and return NULL for now. further
+// Just fprintf to stderr and return NULL for now. further
 // error handling can be done later
 
 rl_result *readline(FILE *stream, size_t *buf_size) {
     if (!stream) {
-        perror("Null file stream\n");
+        fprintf(stderr, "Null file stream\n");
         return NULL;
     }
 
-    rl_result *res = malloc(sizeof(rl_result));
+    rl_result *res = (rl_result *) malloc(sizeof(rl_result));
 
     if (!res) {
-        perror("Malloc failed\n");
+        fprintf(stderr, "Malloc failed\n");
         return res;
     }
 
@@ -67,7 +69,7 @@ rl_result *readline(FILE *stream, size_t *buf_size) {
 
     // Up to the programmer what to do with this
     if (!buffer) {
-        perror("Malloc failed\n");
+        fprintf(stderr, "Malloc failed\n");
         return NULL;
     }
 
@@ -89,7 +91,7 @@ rl_result *readline(FILE *stream, size_t *buf_size) {
             buffer = (char *) realloc(buffer, sizeof(char) * (*buf_size));
 
             if (buffer == NULL) {
-                perror("Realloc failed\n");
+                fprintf(stderr, "Realloc failed\n");
                 return NULL;
             }
         }
@@ -102,23 +104,17 @@ rl_result *readline(FILE *stream, size_t *buf_size) {
     return res;
 }
 
-typedef struct {
-    size_t size, capacity;
-    char **vector
-} vector_str;
-
 int main(void) {
     char *cwd = getcwd(NULL, 0);
 
-    
-    size_t hist_size = 10;
-    char **history = malloc(sizeof(char *) * hist_size);
+    vector_str *v = init_vect_str();
 
     while (true) {
         printf("# ");
 
-        size_t *buf_size = calloc(1, sizeof(size_t));
+        size_t *buf_size = (size_t *) calloc(1, sizeof(size_t));
         rl_result *res = readline(stdin, buf_size);
+        vect_str_push(v, res->buffer);
 
         if (!res || !res->buffer) {
             printf("Null res pointer\n");
@@ -126,15 +122,14 @@ int main(void) {
         }
 
         const char *command = strtok(res->buffer, " ");
+        char *args = strtok(NULL, " ");
 
         if (!strcmp(command, "movetodir")) {
-            char *path = strtok(NULL, " ");
-
-            DIR *dir = opendir(path);
+            DIR *dir = opendir(args);
 
             // file exists
             if (dir) {
-                cwd = path;
+                cwd = args;
                 closedir(dir);
             } else if (errno == ENOENT) {
                 printf("Not a valid folder path\n");
@@ -142,8 +137,24 @@ int main(void) {
                 printf("movetodir failed for some unknown reason\n");
             }
         } else if (!strcmp(command, "whereami")) {
+            if (args != NULL) {
+                printf("whereami: invalid usage\n");
+                printf("usage: whereami\n");
+                continue;
+            }
+
             printf("%s\n", cwd);
         } else if (!strcmp(command, "history")) {
+            if (args == NULL) {
+                for (size_t i = 0; i < v->size; i++) {
+                    printf("%ld %s\n", i + 1, v->vector[i]);
+                }
+            } else if (!strcmp(args, "-c")) {
+                vect_str_clear(v);
+            } else {
+                printf("history: invalid option(s)\n");
+                printf("history: usage: history [-c]\n");
+            }
 
         } else if (!strcmp(command, "byebye")) {
             printf("exiting...\n");
